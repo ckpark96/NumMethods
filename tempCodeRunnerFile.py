@@ -1,0 +1,1 @@
+u = np.reshape(u,(Ny-1,Nx-1)).T
