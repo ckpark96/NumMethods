@@ -3,14 +3,11 @@ import numpy as np
 import scipy.sparse as sp
 import matplotlib.pyplot as plt
 import scipy.sparse.linalg as la
-import warnings
-
-warnings.simplefilter('ignore',sp.SparseEfficiencyWarning)
 
 xmax = 16
 ymax = 8
 a = 1
-h = 0.1
+h = 0.2
 t_instants = [0, 1, 2, 3, 5, 10, 20, 40]
 dt = 0.99*h**2/4
 Nx = int(xmax/h)  #Nx is total number of points (including boundary) - 1
@@ -21,7 +18,7 @@ def u(x,y):
     return np.exp(-2*(x-1.5)**2 - 2*(y-1.5)**2)
 
 reshaper0 = lambda u: np.reshape(u, (Nx-1)*(Ny-1), order = 'F')
-reshaper1 = lambda u: np.reshape(u,(Ny-1, Nx-1))[::-1,:]
+reshaper1 = lambda u: np.reshape(u,(int(Ny)-1,int(Nx)-1))[::-1,:]
 
 def grid_form(h, xmax, ymax):
     return np.mgrid[h:xmax:h,h:ymax:h]
@@ -50,9 +47,9 @@ def backward_NR(u0, dt, A, k):
     while True:
         i += 1
         iterations.append(i)
-        J = A + np.identity(A.shape[0]) - 2*sp.diags(ui) 
+        J = A + sp.eye(A.shape[0]) - 2*sp.diags(ui) 
         f = (A@ui) + (ui*(1-ui))*k
-        vi = la.spsolve(np.identity(J.shape[0])-dt*J , ui-u0-dt*f)
+        vi = la.spsolve(sp.eye(J.shape[0])-dt*J , ui-u0-dt*f)
         ui = ui - vi
         NR_error.append(np.linalg.norm(vi))
         if np.linalg.norm(vi) < 0.001:
@@ -141,26 +138,26 @@ plt.show()
 
 #mx = np.max(np.array(instants))
 #mn = np.min(np.array(instants))
-reshaper = lambda u: np.reshape(u,(int(Ny)-1,int(Nx)-1))[::-1,:]
+
 
 #fig = plt.figure()
 #fig.suptitle("h = %d" % h, fontsize=10)
 #
 #plt.subplot(331)
-#plt.imshow(reshaper(instants[0]))
+#plt.imshow(reshaper1(instants[0]))
 #plt.subplot(332)
-#plt.imshow(reshaper(instants[1]))
+#plt.imshow(reshaper1(instants[1]))
 #plt.subplot(333)
-#plt.imshow(reshaper(instants[2]))
+#plt.imshow(reshaper1(instants[2]))
 #plt.subplot(334)
-#plt.imshow(reshaper(instants[3]))
+#plt.imshow(reshaper1(instants[3]))
 #plt.subplot(335)
-#plt.imshow(reshaper(instants[4]))
+#plt.imshow(reshaper1(instants[4]))
 #plt.subplot(336)
-#plt.imshow(reshaper(instants[5]))
+#plt.imshow(reshaper1(instants[5]))
 #plt.subplot(337)
-#plt.imshow(reshaper(instants[6]))
+#plt.imshow(reshaper1(instants[6]))
 #plt.subplot(338)
-#plt.imshow(reshaper(instants[7]))
+#plt.imshow(reshaper1(instants[7]))
 #
 #plt.show()
