@@ -4,7 +4,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as la
 
 
-h = 0.02
+h = 0.002
 Nx = int(2/h)
 Ny = int(1/h)
 

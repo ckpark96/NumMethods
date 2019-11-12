@@ -6,8 +6,8 @@ import scipy.sparse.linalg as la
 
 xmax = 16
 ymax = 8
-a = 1
-h = 0.2
+a = 10
+h = 0.04
 t_instants = [0, 1, 2, 3, 5, 10, 20, 40]
 dt = 0.99*h**2/4
 Nx = int(xmax/h)  #Nx is total number of points (including boundary) - 1
@@ -57,9 +57,13 @@ def backward_NR(u0, dt, A, k):
 
 def backward_P(u0, dt, A, k):
     ui = u0
+    i = 0
     while True:
+        i += 1
+        iterations.append(i)
         f = (A@ui) + (ui*(np.ones(ui.shape)-ui))*k
         uh = dt*f + u0
+        NR_error.append(np.linalg.norm(uh-ui))
         if (abs(uh-ui) < 0.001).all():
             return uh
         ui = uh
@@ -93,43 +97,58 @@ A = L_form(Nx, Ny)
 
 grid = np.zeros((Nx-1,Ny-1))
 
-def k(h, Nx, Ny):
-    grid = np.zeros((Nx-1,Ny-1))
-    R1 = np.ones(((int(1/h)+1),(int(1/h)+1)))
-    R2 = np.ones(((int(2/h)+1),(int(2/h)+1)))
-    R3 = np.ones(((int(3/h)+1),(int(3/h)+1)))
-    R4 = np.ones(((int(3/h)+1),(int(2/h)+1)))
-    R5 = np.ones(((int(2/h)+1),(int(2/h)+1)))
-    
-    grid[int(1/h)-1:int(2/h),int(1/h)-1:int(2/h)] = R1
-    grid[int(1/h)-1:int(3/h),int(3/h)-1:int(5/h)] = R2
-    grid[int(4/h)-1:int(7/h),int(4/h)-1:int(7/h)] = R3
-    grid[int(9/h)-1:int(12/h),int(4/h)-1:int(6/h)] = R4
-    grid[int(13/h)-1:int(15/h),int(1/h)-1:int(3/h)] = R5
+
+def k(h, Nx, Ny, alpha):
+    if h != 0.08:
+        grid = np.zeros((Nx-1,Ny-1))
+        R1 = np.ones(((int(1/h)+1),(int(1/h)+1))) * alpha
+        R2 = np.ones(((int(2/h)+1),(int(2/h)+1))) * alpha
+        R3 = np.ones(((int(3/h)+1),(int(3/h)+1))) * alpha
+        R4 = np.ones(((int(3/h)+1),(int(2/h)+1))) * alpha
+        R5 = np.ones(((int(2/h)+1),(int(2/h)+1))) * alpha
+        
+        grid[int(1/h)-1:int(2/h),int(1/h)-1:int(2/h)] = R1
+        grid[int(1/h)-1:int(3/h),int(3/h)-1:int(5/h)] = R2
+        grid[int(4/h)-1:int(7/h),int(4/h)-1:int(7/h)] = R3
+        grid[int(9/h)-1:int(12/h),int(4/h)-1:int(6/h)] = R4
+        grid[int(13/h)-1:int(15/h),int(1/h)-1:int(3/h)] = R5
+        
+    else:
+        grid = np.zeros((Nx-1,Ny-1))
+        R1 = np.ones((int(1/h+1),int(1/h+1)))
+        R2 = np.ones((int(2/h-1),int(2/h-1)))
+        R3 = np.ones((int(3/h+1),int(3/h+1)))
+        R4 = np.ones((int(3/h+1),int(2/h+1)))
+        R5 = np.ones((int(2/h),int(2/h)))
+          
+        grid[int(1/h):int(2/h),int(1/h):int(2/h)] = R1
+        grid[int(1/h):int(3/h-1),int(3/h):int(5/h-1)] = R2
+        grid[int(4/h-1):int(7/h),int(4/h-1):int(7/h)] = R3
+        grid[int(9/h):int(12/h),int(4/h-1):int(6/h)] = R4
+        grid[int(13/h):int(15/h),int(1/h):int(3/h)] = R5
     
     return reshaper0(grid)
     
-    
-    
-    
-    
-k = k(h, Nx, Ny)    
+k = k(h, Nx, Ny, a)    
 
-#start = time.time()
-#instants = Fisher_solver(u0, tmax, dt, A, t_instants, k)
-#print('Forward time = ', time.time()-start)
+start = time.time()
+instants = Fisher_solver(u0, tmax, dt, A, t_instants, k)
+print('Forward time = ', time.time()-start)
 
 
 
 NR_error = []
 iterations = []
+
 start = time.time()
 Fisher_solver(u0, tmax, dt, A, t_instants, k, 'backward_NR')
 print('Backward NR time = ', time.time()-start)
 
 fig = plt.figure()
-fig.suptitle("h = %f" % h, fontsize=10)
+fig.suptitle("h = %.2f" % h, fontsize=10)
 plt.scatter(iterations, NR_error)
+plt.xlabel("Iteration number")
+plt.ylabel("Norm of the error")
 plt.show()
 
 #start = time.time()
@@ -141,23 +160,31 @@ plt.show()
 
 
 #fig = plt.figure()
-#fig.suptitle("h = %d" % h, fontsize=10)
+#fig.suptitle("h = %.2f" % h, fontsize=10)
 #
-#plt.subplot(331)
+#one = plt.subplot(331)
 #plt.imshow(reshaper1(instants[0]))
-#plt.subplot(332)
+#one.title.set_text('t = 0')
+#two = plt.subplot(332)
 #plt.imshow(reshaper1(instants[1]))
-#plt.subplot(333)
+#two.title.set_text('t = 1')
+#three = plt.subplot(333)
 #plt.imshow(reshaper1(instants[2]))
-#plt.subplot(334)
+#three.title.set_text('t = 2')
+#four = plt.subplot(334)
 #plt.imshow(reshaper1(instants[3]))
-#plt.subplot(335)
+#four.title.set_text('t = 3')
+#five = plt.subplot(335)
 #plt.imshow(reshaper1(instants[4]))
-#plt.subplot(336)
+#five.title.set_text('t = 5')
+#six = plt.subplot(336)
 #plt.imshow(reshaper1(instants[5]))
-#plt.subplot(337)
+#six.title.set_text('t = 10')
+#seven = plt.subplot(337)
 #plt.imshow(reshaper1(instants[6]))
-#plt.subplot(338)
+#seven.title.set_text('t = 20')
+#eight = plt.subplot(338)
 #plt.imshow(reshaper1(instants[7]))
+#eight.title.set_text('t = 40')
 #
 #plt.show()

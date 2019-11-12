@@ -12,10 +12,10 @@ import time
 
 
 alpha = -5
-h = 0.08
-dt = 0.003
+h = 0.02
+dt = 0.015
 
-def u(x,y): #t=0
+def u(x,y):
     return np.exp(alpha*(x-2)**2+alpha*(y-2)**2)
 
 Nx = int(4/h)
@@ -71,29 +71,33 @@ def time_evolution(u0, A, dt, tmax, timeinstants, algo, stabilizer=None):
     return instants
 
 start = time.time()
-FE = time_evolution(u, A, dt, 0.15, timeinst, 'FE', stabilizer = h**2/4)
+#FE = time_evolution(u, A, dt, 0.15, timeinst, 'FE') #non-stable
+FE = time_evolution(u, A, dt, 0.15, timeinst, 'FE', stabilizer = h**2/4) #stable
 print('forward time =', time.time()-start)
 
 start = time.time()
 BE = time_evolution(u, A, dt, 0.15, timeinst, 'BE')
 print('backward time =', time.time()-start)
-#reshaper = lambda u: np.reshape(u,(Ny-1,Nx-1)).T
 reshaper = lambda u: np.reshape(u, [grid[0].shape[0], grid[0].shape[1]])[::-1,:]
 
 mx = max(np.max(np.array(FE)), np.max(np.array(BE)))
 mn = max(np.min(np.array(FE)), np.min(np.array(BE)))
 
 fig = plt.figure()
-fig.suptitle(dt, fontsize=10)
+fig.suptitle('dt = %.4f'%(dt), fontsize=10)
 
-plt.subplot(241)
+one = plt.subplot(241)
 plt.imshow(reshaper(FE[0]), vmin=mn, vmax=mx)
-plt.subplot(242)
+one.title.set_text('t = 0')
+two = plt.subplot(242)
 plt.imshow(reshaper(FE[1]), vmin=mn, vmax=mx)
-plt.subplot(243)
+two.title.set_text('t = 0.045')
+three = plt.subplot(243)
 plt.imshow(reshaper(FE[2]), vmin=mn, vmax=mx)
-plt.subplot(244)
+three.title.set_text('t = 0.09')
+four = plt.subplot(244)
 plt.imshow(reshaper(FE[3]), vmin=mn, vmax=mx)
+four.title.set_text('t = 0.15')
 
 plt.subplot(245)
 plt.imshow(reshaper(BE[0]), vmin=mn, vmax=mx)
@@ -102,8 +106,9 @@ plt.imshow(reshaper(BE[1]), vmin=mn, vmax=mx)
 plt.subplot(247)
 plt.imshow(reshaper(BE[2]), vmin=mn, vmax=mx)
 plt.subplot(248)
-plt.imshow(reshaper(BE[3]), vmin=mn, vmax=mx)
+im = plt.imshow(reshaper(BE[3]), vmin=mn, vmax=mx)
+
+cb_ax = fig.add_axes([0.92, 0.1, 0.03, 0.8])
+cbar = fig.colorbar(im, cax=cb_ax)
 
 plt.show()
-
-#try slight above stable t and slight below

@@ -52,36 +52,57 @@ xk, info = sp.linalg.gmres(A, source, tol = 1e-12, callback = cback, maxiter = 5
 save = residuals
 
 fig = plt.figure()
+fig.suptitle("GMRES", fontsize=10)
 sour = plt.subplot(221)
 sour.title.set_text('source function')
 plt.imshow(reshaper1(source))
 numba = 2
 logresi = []
-
+spsolvesol = []
+eig = []
 
 for i in [-40, 0, 40]:
     key = 'key' + str(numba)
-#    print(key)
     residuals = []
     A += sp.eye(A.shape[0])*i
+    eigvalues = la.eigs(A)[0]
+    eig.append(eigvalues)
     x = la.spsolve(A, source)
+    spsolvesol.append(x)
     xk = sp.linalg.gmres(A, source, tol = 1e-12, callback = cback, maxiter = 5000, restart = 5000)[0]
     lastrk = residuals[-1]
     verify = abs(lastrk - np.linalg.norm(source - A*xk)/np.linalg.norm(source))
     logresi.append(residuals)
     print("Verification: Absolute difference = ", verify)
     key = plt.subplot(220+numba)
-    key.title.set_text('gamma = %d'%(i))
+    key.title.set_text('$\gamma = %d$'%(i))
     plt.imshow(reshaper1(x))
     numba += 1
     A -= sp.eye(A.shape[0])*i
 
 
 plt.figure()
-plt.semilogy(logresi[0], label = 'gamma = -40')
-plt.semilogy(logresi[1], label = 'gamma = 0')
-plt.semilogy(logresi[2], label = 'gamma = +40')
+plt.semilogy(logresi[0], label = '$\gamma$ = -40')
+plt.semilogy(logresi[1], label = '$\gamma$ = 0')
+plt.semilogy(logresi[2], label = '$\gamma$ = +40')
 plt.legend()
+
+
+
+
+zeros = np.zeros(eig[0].shape)
+fig3 = plt.figure()
+fig3.suptitle("Eigenvalues", fontsize=10)
+one = plt.subplot(311)
+plt.scatter(eig[0],zeros)
+one.title.set_text('$\gamma$ = -40')
+two = plt.subplot(312)
+plt.scatter(eig[1],zeros)
+two.title.set_text('$\gamma$ = 0')
+three = plt.subplot(313)
+plt.scatter(eig[2],zeros)
+three.title.set_text('$\gamma$ = 40')
+
 
 plt.show()
 

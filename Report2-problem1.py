@@ -4,7 +4,6 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as la
 
 
-# FLIP PLOTS
 alpha = -5
 
 def k(x,y):
@@ -21,7 +20,7 @@ def f(x,y):
     np.exp(alpha*(x-5)**2+alpha*(y-3)**2) + \
     np.exp(alpha*(x-7)**2+alpha*(y-3)**2)
 
-h = 0.5
+h = 0.02
 hx = h
 hy = h
 gridx = np.arange(h,8,h)
@@ -74,20 +73,20 @@ y = grid[1]
 f = f(x,y)
 
 plt.figure()
-plt.imshow(f, origin = 'lower')
+plt.imshow(f.T)
 plt.colorbar()
 
 f= np.reshape(f, (Nx*Ny,1), order='F')
 
 u = la.spsolve(L,f)
-u = np.reshape(u,(Ny,Nx)).T
+u = np.reshape(u,(Ny,Nx))[::-1,:]
 
 plt.figure()
 plt.imshow(u, origin = 'lower')
 plt.colorbar()
 
 
-k = k(x,y)
+k = k(x,y).T[::-1,:]
 plt.figure()
 plt.imshow(k, origin = 'lower')
 plt.colorbar()
